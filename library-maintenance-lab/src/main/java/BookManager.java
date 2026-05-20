@@ -9,6 +9,11 @@ public class BookManager {
     // Consider splitting it into smaller methods.
     public int registerBook(String title, String author, int year, String category, int totalCopies, int availableCopies,
             String shelfCode, String isbn) {
+
+        // Adicionado a correcao
+        if (DataUtil.isBlank(title)){
+            throw new IllegalArgumentException("Title não informado/vazio");
+        }
         int result = -1;
         try {
             if (DataUtil.isBlank(title)) {
