@@ -1,7 +1,11 @@
 import java.util.List;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LoanManager {
+
+    private static final Logger logger = LogManager.getLogger(LoanManager.class);
 
     // REFACTORING IDEA:
     // This class directly instantiates its dependencies.
@@ -18,6 +22,18 @@ public class LoanManager {
         try {
             Map<String, Object> user = LegacyDatabase.getUserById(userId);
             Map<String, Object> book = LegacyDatabase.getBookById(bookId);
+            //Adicionado 2 tipos de argumentos invalidos
+            if (user == null){
+                IllegalArgumentException erro = new IllegalArgumentException("User not found");
+                logger.error("Borrow failed, User ID {} not found", userId, erro);
+                throw erro;
+            }
+
+            if (book == null) {
+                IllegalArgumentException erro = new IllegalArgumentException("Book not found");
+                logger.error("Borrow failed, Book ID {} not found", bookId, erro);
+                throw erro;
+            }
 
             if (user != null) {
                 if (book != null) {
@@ -79,7 +95,13 @@ public class LoanManager {
             } else {
                 throw new RuntimeException("User not found");
             }
-        } catch (Exception e) {
+        }
+        //adicionado um novo catch para argumentos invalidos
+        catch (IllegalArgumentException e){
+            throw e;
+        }
+
+        catch (Exception e) {
             LegacyDatabase.addLog("borrow-error-" + e.getMessage());
             throw new RuntimeException("Cannot borrow book now");
         }
@@ -92,10 +114,9 @@ public class LoanManager {
         Map<String, Object> loan = LegacyDatabase.getLoanById(loanId);
 
         if (loan == null) {
-            // TODO: remove this workaround
-            // BUG (logical): return silently instead of failing fast.
-            LegacyDatabase.addLog("loan-not-found-ignored-" + loanId);
-            return;
+            IllegalArgumentException erro = new IllegalArgumentException("Loan not found");
+            logger.error("Return failed. Loan ID {} does not exist.", loanId, erro);
+            throw erro;
         }
 
         if ("OPEN".equals(String.valueOf(loan.get("status")))) {
