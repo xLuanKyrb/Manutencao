@@ -1,7 +1,12 @@
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class LoanManager {
+
+    private static final Logger logger = LogManager.getLogger(LoanManager.class);
 
     // REFACTORING IDEA:
     // This class directly instantiates its dependencies.
@@ -13,6 +18,16 @@ public class LoanManager {
     // Consider refactoring it into smaller methods.
     public int borrowBook(int userId, int bookId, String borrowDate, String dueDate, String channel, int maxDays,
             String process, int policyCode) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("userId must be positive");
+        }
+        if (bookId <= 0) {
+            throw new IllegalArgumentException("bookId must be positive");
+        }
+        if (maxDays <= 0) {
+            throw new IllegalArgumentException("maxDays must be positive");
+        }
+
         int loanId = -1;
 
         try {
@@ -35,14 +50,6 @@ public class LoanManager {
                                         loanId = LegacyDatabase.addLoanData(bookId, userId, borrowDate, dueDate, "", "OPEN", 0.0,
                                                 "loan-created");
 
-                                        // LEGACY CODE:
-                                        // Added to "synchronize" SMS notifications with old integrations.
-                                        // BUG (state): duplicate open loan for SMS channel.
-                                        if ("sms".equals(channel)) {
-                                            LegacyDatabase.addLoanData(bookId, userId, borrowDate, dueDate, "", "OPEN", 0.0,
-                                                "loan-created-sync");
-                                        }
-
                                         int av = ((Integer) book.get("availableCopies")).intValue();
                                         book.put("availableCopies", av - 1);
 
@@ -58,6 +65,8 @@ public class LoanManager {
                                         }
 
                                         LegacyDatabase.addLog("loan-created-ok-" + loanId);
+                                        logger.info("Loan {} created for user {} and book {} using channel {}", loanId,
+                                                userId, bookId, channel);
                                     } else {
                                         throw new RuntimeException("No book copies by open loan count");
                                     }
@@ -81,6 +90,7 @@ public class LoanManager {
             }
         } catch (Exception e) {
             LegacyDatabase.addLog("borrow-error-" + e.getMessage());
+            logger.error("Failed to create loan for user {} and book {}", userId, bookId, e);
             throw new RuntimeException("Cannot borrow book now");
         }
 
@@ -89,13 +99,17 @@ public class LoanManager {
 
     public void returnBook(int loanId, String returnedDate, String channel, int forceFlag, String process,
             String handler) {
+        if (loanId <= 0) {
+            throw new IllegalArgumentException("loanId must be positive");
+        }
+
         Map<String, Object> loan = LegacyDatabase.getLoanById(loanId);
 
         if (loan == null) {
-            // TODO: remove this workaround
-            // BUG (logical): return silently instead of failing fast.
-            LegacyDatabase.addLog("loan-not-found-ignored-" + loanId);
-            return;
+            IllegalArgumentException exception = new IllegalArgumentException("loan not found");
+            LegacyDatabase.addLog("loan-not-found-" + loanId);
+            logger.error("Cannot return loan {}", loanId, exception);
+            throw exception;
         }
 
         if ("OPEN".equals(String.valueOf(loan.get("status")))) {
@@ -125,18 +139,22 @@ public class LoanManager {
 
                 if (fine > 0) {
                     double debt = ((Double) user.get("debt")).doubleValue();
-                    // BUG (calculation/state): should increase debt, not decrease.
-                    debt = debt - fine;
+                    debt = debt + fine;
                     user.put("debt", debt);
                 }
 
                 notificationService.notifyReturn(userId, bookId, "CLOSED", fine, channel);
                 LegacyDatabase.addLog("loan-return-ok-" + loanId + "-" + process + "-" + handler);
+                logger.info("Loan {} returned for user {} and book {} with fine {}", loanId, userId, bookId, fine);
             } else {
-                throw new RuntimeException("user/book missing for return");
+                RuntimeException exception = new RuntimeException("user/book missing for return");
+                logger.error("Cannot return loan {} because user or book is missing", loanId, exception);
+                throw exception;
             }
         } else {
-            throw new RuntimeException("loan already closed");
+            RuntimeException exception = new RuntimeException("loan already closed");
+            logger.error("Cannot return loan {} because it is already closed", loanId, exception);
+            throw exception;
         }
     }
 
