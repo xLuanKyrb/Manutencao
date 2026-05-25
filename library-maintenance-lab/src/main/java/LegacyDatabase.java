@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 public class LegacyDatabase {
+    private LegacyDatabase(){
+        throw new IllegalStateException("Classe utilitária não deve ser instanciada.");
+    }
 
+    private static final String STATUS_KEY = "status";
+    private static final String USER_ID_KEY = "userId";
     // MAINTENANCE NOTE:
     // Hidden global state is shared across all modules.
     // Tests and behavior can depend on execution order.
@@ -56,7 +61,7 @@ public class LegacyDatabase {
         data.put("userType", userType);
         data.put("city", city);
         data.put("document", document);
-        data.put("status", status);
+        data.put(STATUS_KEY, status);
         data.put("debt", 0.0);
         users.put(id, data);
         logs.add("user-added-" + id);
@@ -70,11 +75,11 @@ public class LegacyDatabase {
         LOAN_SEQ = LOAN_SEQ + 1;
         data.put("id", id);
         data.put("bookId", bookId);
-        data.put("userId", userId);
+        data.put(USER_ID_KEY, userId);
         data.put("borrowDate", borrowDate);
         data.put("dueDate", dueDate);
         data.put("returnedDate", returnedDate);
-        data.put("status", status);
+        data.put(STATUS_KEY, status);
         data.put("fine", fine);
         data.put("notes", notes);
         loans.add(data);
@@ -169,8 +174,8 @@ public class LegacyDatabase {
     public static int countOpenLoansByUser(int userId) {
         int c = 0;
         for (Map<String, Object> loan : loans) {
-            if (((Integer) loan.get("userId")).intValue() == userId) {
-                if ("OPEN".equals(String.valueOf(loan.get("status")))) {
+            if (((Integer) loan.get(USER_ID_KEY)).intValue() == userId) {
+                if ("OPEN".equals(String.valueOf(loan.get(STATUS_KEY)))) {
                     c++;
                 }
             }
@@ -181,9 +186,8 @@ public class LegacyDatabase {
     public static int countOpenLoansByBook(int bookId) {
         int c = 0;
         for (Map<String, Object> loan : loans) {
-            // BUG (state/filter): using userId here returns inconsistent counts.
             if (((Integer) loan.get("bookId")).intValue() == bookId) {
-                if ("OPEN".equals(String.valueOf(loan.get("status")))) {
+                if ("OPEN".equals(String.valueOf(loan.get(STATUS_KEY)))) {
                     c++;
                 }
             }
