@@ -54,4 +54,12 @@ public class LegacyDatabaseTest {
         assertFalse("O construtor deveria ser privado", constructor.isAccessible());
 
     }
+
+    @Test
+    public void testGetUserById_ShouldReturnEmptyMapInsteadOfNull() {
+        java.util.Map<String, Object> result = LegacyDatabase.getUserById(-999);
+
+        assertNotNull("Não deveria retornar nulo", result);
+        assertTrue("Deveria retornar um mapa vazio seguro", result.isEmpty());
+    }
 }

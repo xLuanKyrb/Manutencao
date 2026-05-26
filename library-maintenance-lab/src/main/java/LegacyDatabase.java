@@ -88,11 +88,11 @@ public class LegacyDatabase {
     }
 
     public static Map<String, Object> getBookById(int id) {
-        return books.get(id);
+        return books.getOrDefault(id, java.util.Collections.emptyMap());
     }
 
     public static Map<String, Object> getUserById(int id) {
-        return users.get(id);
+        return users.getOrDefault(id, java.util.Collections.emptyMap());
     }
 
     public static Map<String, Object> getLoanById(int id) {
@@ -101,7 +101,7 @@ public class LegacyDatabase {
                 return item;
             }
         }
-        return null;
+        return java.util.Collections.emptyMap();
     }
 
     // old impl
