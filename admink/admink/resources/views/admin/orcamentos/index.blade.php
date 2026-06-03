@@ -75,8 +75,8 @@
                                             data-observacao="{{ $o->observacao }}"
                                             data-cliente="{{ $o->cliente->nome }}"
                                             data-artista="{{ $o->artista->nome }}"
-                                            data-uso_materiais="{{ $o->uso_materiais['nivel'] }}"
-                                            data-complexidade="{{ $o->complexidade['nivel'] }}"
+                                            data-uso_materiais="{{ $o->uso_materiais['nivel'] ?? 'Não definido' }}"
+                                            data-complexidade="{{ $o->complexidade['nivel'] ?? 'Não definido' }}"
                                             data-orcamento_status="{{ $o->orcamento_status->status }}">
                                             <i class="fa fa-eye" aria-hidden="true"></i>
                                             <span>Visualizar</span>

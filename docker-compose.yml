@@ -15,7 +15,7 @@ services:
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_DATABASE=admink_db
+      - DB_DATABASE=admink  
       - DB_USERNAME=admink_user
       - DB_PASSWORD=secret
     depends_on:
@@ -28,7 +28,7 @@ services:
     ports:
       - "3307:3306"
     environment:
-      - MARIADB_DATABASE=admink_db
+      - MARIADB_DATABASE=admink
       - MARIADB_USER=admink_user
       - MARIADB_PASSWORD=secret
       - MARIADB_ROOT_PASSWORD=root_secret
