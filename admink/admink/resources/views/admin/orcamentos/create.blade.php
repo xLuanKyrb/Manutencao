@@ -3,6 +3,9 @@
 @section('styles')
 <!-- Styles -->
 @endsection
+<script src="caminho/para/jquery.min.js"></script>
+
+<script src="caminho/para/jquery.inputmask.min.js"></script>
 
 @section('content')
 <div class="container-fluid">
@@ -326,31 +329,33 @@
     </div>
 </div>
 @endsection
-
 @section('scripts')
 
-<!-- Input Mask Plugin -->
-<script src="{{ asset('vendor/inputmask/dist/jquery.inputmask.js') }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Money Mask Plugin -->
-<script src="{{ asset('/vendor/mask-money/dist/jquery.maskMoney.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
 
-<!-- Máscara para o campo Tempo Estimado -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js"></script>
+
 <script>
     $(document).ready(function() {
-        $(tempoEstimado).inputmask({
-            "regex": "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+        // Máscara para Tempo
+        $("#tempoEstimado").inputmask({
+            "regex": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+        });
+
+        // Máscara para Valor
+        $("#valor").maskMoney({
+            affixesStay: false, 
+            thousands: ".", 
+            decimal: ",", 
+            prefix: "R$ ", 
+            allowZero: true
         });
     });
 </script>
 
-<!-- Máscara para o campo Valor -->
-<script>
-    $("#valor").maskMoney({affixesStay: false, thousands: ".", decimal: ",", prefix: "R$ ", allowZero: true});
-</script>
-
-<!-- Toastr para erros no formulário -->
-@if (Session::has('errors'))
+@if ($errors->any())
 <script>
     toastr.options.positionClass = 'toast-top-center';
     toastr.options.showMethod = 'slideDown';
