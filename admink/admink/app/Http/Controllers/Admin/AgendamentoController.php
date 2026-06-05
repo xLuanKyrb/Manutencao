@@ -52,15 +52,12 @@ class AgendamentoController extends Controller
         $data = $request->all();
 
         $data['data_horario_inicio'] = new \DateTime($data['data_horario_inicio']);
-
         $data['data_horario_fim'] = new \DateTime($data['data_horario_fim']);
 
         $agendamento = new \App\Agendamento($data);
 
         $agendamento->orcamento()->associate($data['orcamento']);
-
         $agendamento->estacao()->associate($data['estacao']);
-
         $agendamento->agendamento_status()->associate('1');
 
         try {
@@ -77,12 +74,19 @@ class AgendamentoController extends Controller
         }
 
         $orcamento = \App\Orcamento::findOrFail($data['orcamento']);
-
         $orcamento->orcamento_status()->associate('3');
-
         $orcamento->save();
 
-        return redirect()->route('admin.agendamentos.index')->with("success_toastr", "O agendamento foi cadastrado com sucesso!");
+        $googleCalendarService = new \App\Services\GoogleCalendarService();
+        $sincronizou = $googleCalendarService->sync($agendamento);
+
+        if ($sincronizou) {
+            return redirect()->route('admin.agendamentos.index')
+                ->with("success_toastr", "Agendamento cadastrado e salvo no Google Calendar com sucesso!");
+        } else {
+            return redirect()->route('admin.agendamentos.index')
+                ->with("warning_toastr", "Agendamento salvo no sistema, mas falhou ao enviar para a Agenda do Google.");
+        }
     }
 
     public function show($id)
@@ -108,16 +112,12 @@ class AgendamentoController extends Controller
         $data = $request->all();
 
         $data['data_horario_inicio'] = new \DateTime($data['data_horario_inicio']);
-
         $data['data_horario_fim'] = new \DateTime($data['data_horario_fim']);
 
         $agendamento = \App\Agendamento::findOrFail($agendamento);
 
         $agendamento->orcamento()->associate($data['orcamento']);
-
         $agendamento->estacao()->associate($data['estacao']);
-
-
 
         try {
             $agendamento->update($data);
@@ -199,7 +199,5 @@ class AgendamentoController extends Controller
         $orcamento->save();
 
         return $pdf->download('termo.pdf');
-
     }
-
 }
